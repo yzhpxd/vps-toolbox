@@ -9,10 +9,9 @@ NC='\033[0m'
 # 本仓库私有/独立模块地址
 TOOLBOX_RAW="https://raw.githubusercontent.com/yzhpxd/vps-toolbox/main"
 # 外部独立开源项目地址
-VSTREAM_RAW="https://raw.githubusercontent.com/yzhpxd/vstream-3xui/main"
 TANZ_RAW="https://raw.githubusercontent.com/yzhpxd/tanZ/main/static"
 
-# 如果将 vps-toolbox 设为 Private 私有仓库，可在下方填入 GitHub Token（公开仓库留空即可）
+# 填入你的 GitHub Personal Access Token (ghp_xxx) 以拉取私有仓库脚本
 GH_TOKEN=""
 
 fetch_and_run() {
@@ -44,7 +43,7 @@ while true; do
   echo -e "${CYAN}          yzhpxd 专属 VPS 运维工具箱 (1级总控)       ${NC}"
   echo -e "${CYAN}=====================================================${NC}"
   echo -e "  ${GREEN}1.${NC} 系统更新 & 安装 Docker + Docker Compose (基础环境)"
-  echo -e "  ${GREEN}2.${NC} 部署 Caddy 视频伪装分流 + 3x-ui 节点 (vstream-3xui)"
+  echo -e "  ${GREEN}2.${NC} 部署 Caddy 视频伪装分流 + 3x-ui 节点 (vstream)"
   echo -e "  ${GREEN}3.${NC} 配置 1G Swap + Docker 挂机容器集群 (流量挂机)"
   echo -e "  ${GREEN}4.${NC} 安装 tanZ 服务器探针监控 (tanZ)"
   echo -e "  ${GREEN}5.${NC} 一键全自动执行 (依次运行 1 -> 2 -> 3 -> 4)"
@@ -60,7 +59,7 @@ while true; do
       ;;
     2)
       echo -e "\n${CYAN}>>> 正在启动 [2] Caddy 视频分流 + 3x-ui 部署...${NC}"
-      fetch_and_run "${VSTREAM_RAW}/install.sh"
+      fetch_and_run "${TOOLBOX_RAW}/vstream.sh"
       read -p "按回车键返回主菜单..." </dev/tty
       ;;
     3)
@@ -76,7 +75,7 @@ while true; do
     5)
       echo -e "\n${CYAN}>>> 正在全自动执行全部模块 (1 -> 2 -> 3 -> 4)...${NC}"
       fetch_and_run "${TOOLBOX_RAW}/init.sh"
-      fetch_and_run "${VSTREAM_RAW}/install.sh"
+      fetch_and_run "${TOOLBOX_RAW}/vstream.sh"
       fetch_and_run "${TOOLBOX_RAW}/earn.sh"
       fetch_and_run "${TANZ_RAW}/install.sh"
       read -p "全部模块执行完毕，按回车键返回主菜单..." </dev/tty
