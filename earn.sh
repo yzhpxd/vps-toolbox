@@ -1,30 +1,19 @@
 #!/bin/bash
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-CYAN='\033[0;36m'
-NC='\033[0m'
-
-if [ "$EUID" -ne 0 ]; then
-  echo -e "${RED}错误：请使用 root 权限运行此脚本！${NC}"
-  exit 1
-fi
-
-echo -e "${CYAN}=====================================================${NC}"
-echo -e "${CYAN}   [2级模块] Swap 1G + Docker + 挂机容器一键部署     ${NC}"
-echo -e "${CYAN}=====================================================${NC}"
-
-echo -e "\n${YELLOW}[1/4] 正在检查 Swap 设置...${NC}"
+echo "正在检查 Swap 设置..."
 if [ -f /swapfile ]; then
     echo "✅ /swapfile 已存在，跳过创建步骤。"
 else
     echo "⚠️ 未检测到 Swap，正在创建 1GB 虚拟内存..."
+    # 1. 创建 1GB 文件
     dd if=/dev/zero of=/swapfile bs=1M count=1024
+    # 2. 设置权限
     chmod 600 /swapfile
+    # 3. 启用 Swap
     mkswap /swapfile
     swapon /swapfile
+    # 4. 写入开机自启
     echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+    # 5. 优化系统策略 (优先使用物理内存)
     sysctl vm.swappiness=10
     echo 'vm.swappiness=10' | tee -a /etc/sysctl.conf
     echo "✅ Swap 创建成功！"
@@ -33,15 +22,11 @@ fi
 free -h
 echo "------------------------------------------------"
 
-echo -e "\n${YELLOW}[2/4] 正在安装/更新 Docker...${NC}"
-if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com | bash
-    systemctl enable --now docker
-else
-    echo "✅ 检测到 Docker 已安装 ($(docker -v))，跳过重装。"
-fi
 
-echo -e "\n${YELLOW}[3/4] 正在启动挂机容器与 Watchtower...${NC}"
+echo "正在安装/更新 Docker..."
+curl -fsSL https://get.docker.com | bash
+
+echo "正在启动挂机容器..."
 
 docker rm -f tm 2>/dev/null
 docker run -d --restart=always --name tm traffmonetizer/cli_v2 start accept --token cuMj2hyH/bsiJMgQk6wGx8RL4y7b/vtAKF2LxDKtSME=
@@ -59,22 +44,16 @@ docker run -d --restart=always -e CID=7Tzp --name psclient packetstream/psclient
 docker rm -f watchtower 2>/dev/null
 docker run -d --restart=always --name watchtower -e DOCKER_API_VERSION=1.44 -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower --cleanup --include-stopped --revive-stopped --interval 3600
 
-echo -e "\n${YELLOW}[4/4] 正在安装常用工具与 acme.sh...${NC}"
-export DEBIAN_FRONTEND=noninteractive
-apt update -y
-apt install -y cron unzip curl socat
+echo "正在安装常用工具..."
+apt update
+apt install -y cron unzip
 
 systemctl enable cron
 systemctl start cron
 
-if [ ! -d "$HOME/.acme.sh" ]; then
-    curl https://get.acme.sh | sh
-else
-    echo "✅ acme.sh 已安装，跳过。"
-fi
+curl https://get.acme.sh | sh
 
-echo -e "\n${GREEN}========================================${NC}"
-echo -e "${GREEN}✅ 所有任务执行完毕！${NC}"
+echo "========================================"
+echo "✅ 所有任务执行完毕！"
 echo "当前内存状态："
 free -h
-echo -e "${GREEN}========================================${NC}"
